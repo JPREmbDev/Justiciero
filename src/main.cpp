@@ -1,5 +1,5 @@
 
-#include "bmi160.h"
+#include "localBmi160.h"
 #include <freertos/FreeRTOS.h>
 
 

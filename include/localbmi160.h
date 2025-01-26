@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#include "bmi160.h"
+
+
+
 
 void bmi_initSpi();
 

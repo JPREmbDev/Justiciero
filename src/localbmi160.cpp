@@ -1,4 +1,4 @@
-#include "bmi160.h"
+#include "localBmi160.h"
 
 #include <esp_log.h>
 
