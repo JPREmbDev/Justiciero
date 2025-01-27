@@ -53,7 +53,8 @@ Documentación técnica y explicación del proyecto de comunicación con el sens
   MOSI primer bit en bajo.
 
 
-![Primera transmision Lectura y Escritura](docs/img/Primera transmisi\303\263n lectura y escritura.png)
+![Primera transmisión Lectura y Escritura](docs/img/PrimeraTransmision.png)
+
 
 
 
