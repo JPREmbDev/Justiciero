@@ -44,6 +44,19 @@ Documentación técnica y explicación del proyecto de comunicación con el sens
 - **Base**:  
   Según el diagrama de referencia del [Waveshare NodeMCU-32S](https://www.waveshare.com/img/devkit/accBoard/NodeMCU-32S/NodeMCU-32S-details-3.jpg), GPIO5 está libre y es adecuado para CS.
 
+
+#### **TRANSMISION**
+- **LECTURA**:
+  MOSI primer bit en alto.
+
+- **ESCRITURA**:
+  MOSI primer bit en bajo.
+
+
+![Primera transmision Lectura y Escritura](docs/img/Primera transmisi\303\263n lectura y escritura.png)
+
+
+
 ---
 
 ### Estructura del Código
