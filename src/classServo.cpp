@@ -1,4 +1,3 @@
-
 #include "classServo.h"
 #include <driver/gpio.h>
 #include "driver/ledc.h"
@@ -8,7 +7,8 @@
 
 
 Servo::Servo() {
-
+    min_pulse_width = 500;  // Valor predeterminado para 0 grados (500µs)
+    max_pulse_width = 2500; // Valor predeterminado para 180 grados (2500µs)
 }
 
 void Servo::initHw() {
@@ -39,14 +39,26 @@ void Servo::initHw() {
 }
 
 void Servo::calibrate(uint32_t min, uint32_t max) {
-
-
+    min_pulse_width = min;
+    max_pulse_width = max;
 }
 
 void Servo::setPos(uint32_t pos) {
+    // Asegúrate de que el mapeo sea correcto para tu servo
+    // uint32_t pulse_width = min_pulse_width + (pos * (max_pulse_width - min_pulse_width) / 180);
+    // ESP_ERROR_CHECK(ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, pulse_width));
+    // ESP_ERROR_CHECK(ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0));
+    // Limitar el valor de pos entre 0 y 180
+    if (pos > 180) pos = 180;
     
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, pos));
-    // Update duty to apply the new value
+    // Calcular el ancho de pulso en microsegundos basado en la posición
+    uint32_t pulse_width_us = min_pulse_width + (pos * (max_pulse_width - min_pulse_width) / 180);
+    
+    // Convertir microsegundos a valor de ciclo de trabajo para LEDC
+    // El período completo es 20000 µs (20 ms), y la resolución es 10 bits (1024 valores)
+    uint32_t duty = (pulse_width_us * 1024) / 20000;
+    
+    // Aplicar el ciclo de trabajo
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, duty));
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0));
-
 }

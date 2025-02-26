@@ -25,8 +25,8 @@ class Servo {
         void setPos(uint32_t pos);
 
     private:
-
-
+        uint32_t min_pulse_width;
+        uint32_t max_pulse_width;
 };
 
 

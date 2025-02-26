@@ -1,4 +1,3 @@
-
 #include "classBmi160.h"
 #include "classServo.h"
 #include "esp_log.h"
@@ -16,18 +15,22 @@ void app_main() {
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     servo.initHw();
-    uint32_t angle = 20;
+    
+    // Llama a calibrate con valores de ejemplo
+    // Ajusta estos valores según las especificaciones de tu servo
+    servo.calibrate(500, 2500);
+
+    uint32_t angle = 0;
     for(;;)
     {
         ESP_LOGE("MAIN", "Angle: %lu", angle);
         servo.setPos(angle);
         angle ++;
-        if (angle > 100)
+        if (angle > 180)
         {
-            angle = 20;
+            angle = 0;
         }
-        vTaskDelay(pdMS_TO_TICKS(50));
-
+        vTaskDelay(pdMS_TO_TICKS(50)); // Más tiempo para observar cada posición
     }
 
 
