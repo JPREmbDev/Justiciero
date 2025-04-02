@@ -41,7 +41,17 @@ class Bmi160 {
             float gyroZ;   // Gyroscope Z-axis data
             float time;    // Timestamp
         };   
-            
+
+        /**
+         * @brief Estructura para almacenar los ángulos de orientación calculados
+         */
+        struct AngleData {
+            float roll;         // Ángulo de inclinación lateral (rotación alrededor del eje X)
+            float pitch;        // Ángulo de inclinación frontal (rotación alrededor del eje Y)
+            float yaw;          // Ángulo de dirección (rotación alrededor del eje Z)
+            unsigned long time; // Tiempo de la última medición
+        };
+        
         // Constructor, mejor solo inicializar variables, pero no hacer nada mas
         // Constructor con lista de inicialización
         Bmi160(): 
@@ -92,6 +102,15 @@ class Bmi160 {
          */
         uint8_t getData(Data &accel, Data &gyro);
 
+        /**
+         * @brief Calcula los ángulos de orientación utilizando datos del acelerómetro y giroscopio
+         * @param angles Estructura donde se almacenarán los ángulos calculados
+         * @param dt Intervalo de tiempo entre mediciones en segundos
+         * @param alpha Factor de peso para el filtro complementario (0.0-1.0)
+         * @return uint8_t 0 si el cálculo fue exitoso, código de error en caso contrario
+         */
+        uint8_t getAngles(AngleData &angles, float dt, float alpha = 0.96f);
+        
         /**
          * @brief Configure the BMI160 sensor
          * 
