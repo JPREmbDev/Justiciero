@@ -92,11 +92,11 @@ uint8_t Bmi160::init(Bmi160SpiConfig spiConfig) {
     ESP_LOGE(TAG, "Bus SPI Initialized correctly!");
 
     // Configuración del dispositivo SPI (BMI160)
-    spiInter.spics_io_num = spiConfig.csPin;         // Pin CS (Chip Select)
-    spiInter.clock_speed_hz = spiConfig.spiSpeed;      // Frecuencia de reloj: 1 MHz (recomendado para BMI160)
-    spiInter.mode = 0;                          // Modo SPI 0 (CPOL=0, CPHA=0)
-    spiInter.queue_size = 10;                   // Máximo de transacciones en cola
-    spiInter.address_bits = 8;                  // Dirección de 8 bits (compatible con BMI160)
+    spiInter.spics_io_num   = spiConfig.csPin;          // Pin CS (Chip Select)
+    spiInter.clock_speed_hz = spiConfig.spiSpeed;       // Frecuencia de reloj: 1 MHz (recomendado para BMI160)
+    spiInter.mode           = 0;                        // Modo SPI 0 (CPOL=0, CPHA=0)
+    spiInter.queue_size     = 10;                       // Máximo de transacciones en cola
+    spiInter.address_bits   = 8;                        // Dirección de 8 bits (compatible con BMI160)
 
     // Añade el dispositivo al bus SPI
     if (spi_bus_add_device(spiConfig.spiHost, &spiInter, &spiHandle) != ESP_OK) {
@@ -110,7 +110,35 @@ uint8_t Bmi160::init(Bmi160SpiConfig spiConfig) {
     bmi160Dev.write     = bmi_write_spi;            // Función de escritura SPI
     bmi160Dev.delay_ms  = bmi_delayms_spi;          // Función delay SPI  
 
-    return Configure();
+    // --- Logica de Reintento para la funcion Configure ---
+    const int       MAX_CONFIGURE_RETRIES       = 3;                    // Número máx de intentos
+    const uint32_t  CONFIGURE_RETRY_DELAY_MS    = 200;                  // Retraso entre intentos
+    uint8_t         configure_result            = BMI160_E_COM_FAIL;    // Valor inicial de error
+
+    
+    for (int retry = 0; retry < MAX_CONFIGURE_RETRIES; ++retry) {
+        ESP_LOGI(TAG, "Intentando configuración BMI160 (Intento %d/%d)...", retry + 1, MAX_CONFIGURE_RETRIES);
+        configure_result = Configure(); // Llama a la función que contiene bmi160_init
+
+        if (configure_result == BMI160_OK) {
+            ESP_LOGI(TAG, "Configuración BMI160 exitosa en intento %d.", retry + 1);
+            return BMI160_OK; // ¡Éxito! Salir de init con OK
+        }
+
+        // Si Configure() falló (probablemente por bmi160_init), registrar y esperar
+        ESP_LOGW(TAG, "Configuración BMI160 falló en intento %d (Error: %d). Reintentando en %lu ms...",
+                 retry + 1, configure_result, CONFIGURE_RETRY_DELAY_MS);
+
+        // Esperar antes del siguiente intento (solo si no es el último intento)
+        if (retry < MAX_CONFIGURE_RETRIES - 1) {
+            vTaskDelay(pdMS_TO_TICKS(CONFIGURE_RETRY_DELAY_MS));
+        }
+    }
+
+    // Si llegamos aquí, todos los intentos fallaron
+    ESP_LOGE(TAG, "Configuración BMI160 falló después de %d intentos. Último error: %d", MAX_CONFIGURE_RETRIES, configure_result);
+    return configure_result; // Devolver el último código de error recibido de Configure()
+
 }
 
 /**
@@ -140,6 +168,7 @@ uint8_t Bmi160::Configure() {
     else
     {
         ESP_LOGE(TAG, "BMI160 initialization failure !\n");
+        return rslt;
     }
 
     /* Select the Output data rate, range of accelerometer sensor */
