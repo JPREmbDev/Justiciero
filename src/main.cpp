@@ -69,7 +69,7 @@ void app_main() {
 
     Bmi160SpiConfig config = {
         .spiHost = SPI3_HOST,
-        .csPin = GPIO_NUM_21,
+        .csPin = GPIO_NUM_22,
         .sclkPin = GPIO_NUM_18,
         .misoPin = GPIO_NUM_19,
         .mosiPin = GPIO_NUM_23,
