@@ -5,6 +5,8 @@
 #include "esp_log.h"
 #include "esp_sleep.h" 
 
+#include <math.h>
+
 #include <freertos/FreeRTOS.h>
 
 extern "C" void app_main();
@@ -30,7 +32,7 @@ constexpr ledc_timer_t  leftTimer       = LEDC_TIMER_1;
 Bmi160 imu;
 Servo servo;
 motorController motor;
-PID pid(1.0, 0.0, 0.0);
+PID pid(200.0, 0.0, 0.0);
 
 // --- Función Auxiliar para Deep Sleep ---
 void enter_deep_sleep(const char* reason) {
@@ -119,54 +121,61 @@ void app_main() {
     ESP_LOGI("MAIN", "Todas las inicializaciones completadas con éxito.");
     vTaskDelay(pdMS_TO_TICKS(1000));
 
+
     float alpha = 0.0f; // Inicializa alpha a 0.0 en grados
     float factor = 0.995f; // Inicializa factor a 0.0
     Bmi160::Data acc, gyro;
     float lastime = 0.0f;
     float dt = 0.0f;
+    float accAngle = 0.0f; // Radianes a grados
 
-    int32_t motorL, motorR; // Variables para almacenar la velocidad de los motores
+    int32_t motorLR; // Variables para almacenar la velocidad de los motores
      
     for(;;)
     {
-        ESP_LOGI("MAIN", "Leyendo datos del IMU...");
+        //ESP_LOGI("MAIN", "Leyendo datos del IMU...");
         // Paso 1: Calculamos alpha, angulo desde la vertical
         imu.getData(acc, gyro);
         /*
             gyro.x --> lo que estamos girando en º/s
 
         */
-        ESP_LOGI("MAIN", "--------------------------------");
-        ESP_LOGI("MAIN", "Giroscopio: x=%8.2f, y=%8.2f, z=%8.2f", gyro.gyroX, gyro.gyroY, gyro.gyroZ);
-        ESP_LOGI("MAIN", "--------------------------------");
-        ESP_LOGI("MAIN", "Acelerómetro: x=%8.2f, y=%8.2f, z=%8.2f", acc.accX, acc.accY, acc.accZ);  
-        ESP_LOGI("MAIN", "--------------------------------");
-        ESP_LOGI("MAIN", "Acelerómetro: x=%8.2f",acc.accX);
-        ESP_LOGE("MAIN", "--------------------------------");
-        ESP_LOGI("MAIN", "Giroscopio: y=%8.2f",gyro.gyroY);
+        //ESP_LOGI("MAIN", "--------------------------------");
+        //ESP_LOGI("MAIN", "Giroscopio: x=%8.2f, y=%8.2f, z=%8.2f", gyro.gyroX, gyro.gyroY, gyro.gyroZ);
+        //ESP_LOGI("MAIN", "--------------------------------");
+        //ESP_LOGI("MAIN", "Acelerómetro: x=%8.2f, y=%8.2f, z=%8.2f", acc.accX, acc.accY, acc.accZ);  
+        //ESP_LOGI("MAIN", "--------------------------------");
+        //ESP_LOGI("MAIN", "Acelerómetro: z=%8.2f",acc.accZ);
+        //ESP_LOGE("MAIN", "--------------------------------");
+        //ESP_LOGI("MAIN", "Giroscopio: x=%8.2f",gyro.gyroX);
         /*
-            Según tenemos colocado el BMI160, ACC.X es el que nos interesa del acelerómetro
-            En el caso del giroscopio es el gyro.Y el que nos interesa
-        */
-        dt = gyro.time - lastime; // Tiempo entre lecturas
+            gyro.gyroX
+            acc.accZ
 
-        //       factor al estar cerca de 1 hace que el giroscopio tenga más peso
-        //       acc.z --> el valor del acelerómetro en z, que es el que nos da la inclinación
-        //             --> Nos vamos a ir calibrando en el tiempo con lo que nos dice el acelerómetro
-        alpha = ((alpha + gyro.gyroY*dt/1000.0f) * factor) + acc.accX*9.8f* (1 - factor); // Filtro complementario
-        ESP_LOGE("MAIN", "--------------------------------");
-        ESP_LOGI("MAIN", "Alpha: %8.2f", alpha); // Imprime el valor de alpha
+            Probamos con la acc.accY
+        */
+        //accAngle = (atan2(acc.accX, acc.accY) * 57.296f); // Radianes a grados
+        //ESP_LOGI("MAIN", "Anglulo_1: %8.2f", accAngle); // Imprime el valor de alpha
+
+        //accAngle = (atan2(acc.accX, acc.accZ) * 57.296f); // Radianes a grados
+        //ESP_LOGI("MAIN", "Anglulo_2: %8.2f", accAngle); // Imprime el valor de alpha
+
+
+        dt = (gyro.time - lastime)/1000.0f; // Tiempo entre lecturas
+        lastime = gyro.time; // Actualiza el tiempo de la última lectura
+
+        alpha = ((alpha + gyro.gyroX*dt) * factor) + (acc.accY*9.8*(1.0f - factor)); // Filtro complementario
+
+        //ESP_LOGE("MAIN", "--------------------------------");
+        //ESP_LOGI("alpha", "alpha: %8.2f", alpha); // Imprime el valor de alpha
 
         // Paso 2: Calculamos el movimiento de los motores según alpha
-        motorL = pid.update(alpha, dt); // Actualiza el PID con el error y el tiempo
-        motorR = pid.update(alpha, dt); // Actualiza el PID con el error y el tiempo
-        ESP_LOGE("MAIN", "--------------------------------");
-        ESP_LOGI("MAIN", "MotorL: %ld, MotorR: %ld", motorL, motorR);
-        motor.setSpeed(motorL, motorR); // Establece la velocidad de los motores
+        motorLR = pid.update(-alpha, dt); // Actualiza el PID con el error y el tiempo
+        //ESP_LOGE("MAIN", "--------------------------------");
+        //ESP_LOGI("MAIN", "MotorL y MotorR: %ld", motorLR); // Imprime la velocidad de los motores
+        motor.setSpeed(-motorLR, -motorLR); // Establece la velocidad de los motores
         
-        lastime = gyro.time; // Actualiza el tiempo de la última lectura
+        
         vTaskDelay(2);
     }
-
-    
 }

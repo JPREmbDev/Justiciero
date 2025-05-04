@@ -75,6 +75,13 @@ class motorController {
         // PWM channel for right motor
         ledc_channel_t rightPwmChannel;
 
+        typedef enum {
+            DIR_FWD = 0, // Forward direction
+            DIR_BWD
+        }Direction;
+
+        Direction dirL, dirR; // Direction of the motors
+
 };
 
 

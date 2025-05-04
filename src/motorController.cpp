@@ -132,42 +132,71 @@ uint8_t motorController::initHw(ledc_timer_t leftTimer, ledc_timer_t rightTimer)
 
 uint8_t motorController::setSpeed(int32_t leftSpeed, int32_t rightSpeed)
 {
-    ESP_LOGI(TAG, "Estableciendo velocidad del motor: izquierda=%ld, derecha=%ld", leftSpeed, rightSpeed);
+    // ESP_LOGI(TAG, "Estableciendo velocidad del motor: izquierda=%ld, derecha=%ld", leftSpeed, rightSpeed);
+    // // Asegurarse de que la velocidad esté en el rango permitido
+    // if (leftSpeed < 0) {
+        // leftSpeed = -leftSpeed;
+    // }
+    // if (rightSpeed < 0) {
+        // rightSpeed = -rightSpeed;
+    // }
+    // // Configuración de la velocidad del motor izquierdo
+    // esp_err_t err = ledc_set_duty(LEDC_LOW_SPEED_MODE, leftPwmChannel, leftSpeed);
+    // if (err != ESP_OK) {
+        // ESP_LOGE(TAG, "Error al establecer el duty cycle del motor izquierdo: %s", esp_err_to_name(err));
+        // return false;
+    // }
+    // err = ledc_update_duty(LEDC_LOW_SPEED_MODE, leftPwmChannel);
+    // if (err != ESP_OK) {
+        // ESP_LOGE(TAG, "Error al actualizar el duty cycle del motor izquierdo: %s", esp_err_to_name(err));
+        // return false;
+    // }
+    // ESP_LOGI(TAG, "Velocidad del motor izquierdo establecida correctamente.");
+    // // Configuración de la velocidad del motor derecho
+    // err = ledc_set_duty(LEDC_LOW_SPEED_MODE, rightPwmChannel, rightSpeed);
+    // if (err != ESP_OK) {
+        // ESP_LOGE(TAG, "Error al establecer el duty cycle del motor derecho: %s", esp_err_to_name(err));
+        // return false;
+    // }
+    // err = ledc_update_duty(LEDC_LOW_SPEED_MODE, rightPwmChannel);
+    // if (err != ESP_OK) {
+        // ESP_LOGE(TAG, "Error al actualizar el duty cycle del motor derecho: %s", esp_err_to_name(err));
+        // return false;
+    // }
+    // ESP_LOGI(TAG, "Velocidad del motor derecho establecida correctamente.");
 
-    // Asegurarse de que la velocidad esté en el rango permitido
-    if (leftSpeed < 0) {
-        leftSpeed = -leftSpeed;
+
+    if(leftSpeed > 0 && dirL == DIR_BWD)
+    {
+        gpio_set_level(leftPinA, 0);
+        gpio_set_level(leftPinB, 1);
+        dirL = DIR_FWD;
+    }
+    else if(leftSpeed < 0 && dirL == DIR_FWD)
+    {
+        gpio_set_level(leftPinA, 1);
+        gpio_set_level(leftPinB, 0);
+        dirL = DIR_BWD;
     }
 
-    if (rightSpeed < 0) {
-        rightSpeed = -rightSpeed;
+    if(rightSpeed > 0 && dirR == DIR_BWD)
+    {
+        gpio_set_level(rightPinA, 0);
+        gpio_set_level(rightPinB, 1);
+        dirR = DIR_FWD;
     }
+    else if(rightSpeed < 0 && dirR == DIR_FWD)
+    {
+        gpio_set_level(rightPinA, 1);
+        gpio_set_level(rightPinB, 0);
+        dirR = DIR_BWD;
+    }
+    
 
-    // Configuración de la velocidad del motor izquierdo
-    esp_err_t err = ledc_set_duty(LEDC_LOW_SPEED_MODE, leftPwmChannel, leftSpeed);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error al establecer el duty cycle del motor izquierdo: %s", esp_err_to_name(err));
-        return false;
-    }
-    err = ledc_update_duty(LEDC_LOW_SPEED_MODE, leftPwmChannel);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error al actualizar el duty cycle del motor izquierdo: %s", esp_err_to_name(err));
-        return false;
-    }
-    ESP_LOGI(TAG, "Velocidad del motor izquierdo establecida correctamente.");
-
-    // Configuración de la velocidad del motor derecho
-    err = ledc_set_duty(LEDC_LOW_SPEED_MODE, rightPwmChannel, rightSpeed);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error al establecer el duty cycle del motor derecho: %s", esp_err_to_name(err));
-        return false;
-    }
-    err = ledc_update_duty(LEDC_LOW_SPEED_MODE, rightPwmChannel);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error al actualizar el duty cycle del motor derecho: %s", esp_err_to_name(err));
-        return false;
-    }
-    ESP_LOGI(TAG, "Velocidad del motor derecho establecida correctamente.");
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, leftPwmChannel, abs(leftSpeed));
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, leftPwmChannel);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, rightPwmChannel, abs(rightSpeed));
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, rightPwmChannel);
 
     return true;
 }
