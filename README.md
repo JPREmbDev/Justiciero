@@ -33,8 +33,8 @@ Documentación técnica y explicación del proyecto de comunicación con el sens
 - **Conexiones SPI**:
   | Pin ESP32 | Función  | Pin BMI160 |
   |-----------|----------|------------|
-  | GPIO23    | MOSI     | SDO/SDI    |
-  | GPIO19    | MISO     | SDA/SDO    |
+  | GPIO23    | MOSI     | SDA/SDI    |
+  | GPIO19    | MISO     | SAO/SDO    |
   | GPIO18    | SCLK     | SCL        |
   | GPIO5     | CS       | CSB        |
 
